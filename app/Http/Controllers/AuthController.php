@@ -29,7 +29,7 @@ class AuthController extends Controller
                 'error' => [
                     'warning' => $errors
                 ],
-                'code'  => 500
+                'code'  => 400
             ], 400);
 
         } else if ($validator->passes()) {
