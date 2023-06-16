@@ -14,7 +14,7 @@ class Bike extends Model
 
     function getBike(int $id, mixed $data): Collection
     {
-        $valid_column = ['bikes.bike_id', 'bikes.bike_price', 'bikes.bike_name', 'bikes.bike_classify', 'bikes.bike_local',
+        $valid_column = ['bikes.bike_id', 'bikes.bike_price', 'bikes.bike_name', 'bikes.bike_classify', 'bikes.bike_local', 'bikes.bike_address',
                          'bikes.bike_brand', 'bikes.bike_plate_num', 'bikes.bike_tank', 'bikes.bike_consumption', 'bikes.bike_capacity'];
         $column_query = [];
 
@@ -39,7 +39,7 @@ class Bike extends Model
 
     function getBikes(mixed $data): LengthAwarePaginator
     {
-        $valid_column = ['bikes.bike_id', 'bikes.bike_price', 'bikes.bike_name', 'bikes.bike_classify', 'bikes.bike_local',
+        $valid_column = ['bikes.bike_id', 'bikes.bike_price', 'bikes.bike_name', 'bikes.bike_classify', 'bikes.bike_local', 'bikes.bike_address',
                          'bikes.bike_brand', 'bikes.bike_plate_num', 'bikes.bike_tank', 'bikes.bike_consumption', 'bikes.bike_capacity'];
         $column_query = [];
 
@@ -60,10 +60,6 @@ class Bike extends Model
         $db = DB::table('bikes')
             ->select($column_query);
 
-        if (!empty($data['local'])) {
-            $db = $db->where('bikes.bike_local', 'LIKE', '%' . $data['local'] . '%', 'AND');
-        }
-
         if (!empty($data['search_by']['price'])) {
             $db = $db->where('bikes.bike_price', 'LIKE', '%' . $data['keyword'] . '%', 'OR');
         }
@@ -74,6 +70,18 @@ class Bike extends Model
 
         if (!empty($data['search_by']['name'])) {
             $db = $db->where('bikes.bike_name', 'LIKE', '%' . $data['keyword'] . '%', 'OR');
+        }
+
+        if (!empty($data['local'])) {
+            $db = $db->where('bikes.bike_local', 'LIKE', '%' . $data['local'] . '%', 'AND');
+        }
+
+        if(!empty($data['price_min'])) {
+            $db = $db->where('Bike.bike_price', '>=', $data['price_min'], 'AND');
+        }
+
+        if(!empty($data['price_max'])) {
+            $db = $db->where('Bike.bike_price', '<=', $data['price_max'], 'AND');
         }
 
         $db->orderBy('bikes.bike_price');

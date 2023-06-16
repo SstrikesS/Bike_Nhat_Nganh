@@ -16,18 +16,25 @@ class BikeController extends Controller
     {
         $page = $request->query('page') ?? 1;
         $keyword = $request->query('keyword') ?? '';
+        $local = $request->query('local') ?? '';
         $search_by = $request->query('search_by') ?? null;
         $column_query = $request->query('column_query') ?? null;
         $limit = $request->query('limit') ?? 30;
+        $price_min = $request->query('min_price') ?? 0;
+        $price_max = $request->query('max_price') ?? 0;
 
         if (empty($page)) $page = 1;
         if (empty($keyword)) $keyword = '';
         if (empty($limit)) $limit = 10;
 
+        if(!empty($price_max)) $filter_data['price_max'] = $price_max;
+
         $filter_data = [
             'page'    => $page,
             'keyword' => $keyword,
-            'limit'   => $limit
+            'local'   => $local,
+            'limit'   => $limit,
+            'min_price' => $price_min
         ];
 
         if (!empty($column_query)) {
@@ -40,16 +47,15 @@ class BikeController extends Controller
             foreach (explode(",", $search_by) as $value) {
                 $filter_data['search_by'][$value] = true;
             }
-        }else if(!empty($keyword) && empty($search_by)){
+        } else if (!empty($keyword) && empty($search_by)) {
             $filter_data['search_by']['bike_local'] = true;
         }
-
 
         $result = (new Bike)->getBikes($filter_data);
 
         $data = [];
 
-        foreach ($result->items() as $value){
+        foreach ($result->items() as $value) {
             $data['items'][] = get_object_vars($value);
         }
 
@@ -69,7 +75,7 @@ class BikeController extends Controller
         $data['code'] = 200;
         $data['success'] = true;
 
-        return new JsonResponse($data, 200, [], 0);
+        return  response()->json($data);
     }
 
     /**
@@ -89,14 +95,12 @@ class BikeController extends Controller
 
         if (empty($id)) {
 
-            $data = [
+            return response()->json([
                 'code'  => 400,
                 'error' => [
                     'warning' => 'Bad Request! Không tìm thấy bike_id'
                 ]
-            ];
-
-            return new JsonResponse($data, 400, [], 0);
+            ]);
         }
 
         $bike = (new Bike)->getBike($id, $filter_data);
@@ -104,16 +108,13 @@ class BikeController extends Controller
 
         if (empty($bike->toArray())) {
 
-            $data = [
+            return response()->json([
                 'code'  => 400,
                 'error' => [
                     'warning' => 'Bad Request! Không tìm thấy bike_id'
                 ]
-            ];
-
-            return new JsonResponse($data, 400, [], 0);
+            ]);
         }
-
 
 
         $data['items'] = (array)$bike["0"];
@@ -121,7 +122,7 @@ class BikeController extends Controller
         $data['code'] = 200;
         $data['success'] = true;
 
-        return new JsonResponse($data, 200, [], 0);
+        return response()->json($data);
     }
 
     /**

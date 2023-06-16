@@ -14,7 +14,6 @@ class AuthController extends Controller
 {
     function register(Request $request): JsonResponse
     {
-
         $validator = Validator::make($request->all(), [
             'name'     => 'required|string|max:255|min:3',
             'email'    => 'required|email|unique:users|max:255',
@@ -81,12 +80,13 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'success'      => 'true',
-            'code'         => 200
-        ]);
+        $data['data'] =$user->toArray();
+        $data['data']['access_token'] = $token;
+        $data['data']['token_type'] = 'Bearer';
+        $data['data']['success'] = 'true';
+        $data['data']['code'] = 200;
+
+        return response()->json($data);
     }
 
     public function me(Request $request)
@@ -96,7 +96,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        if(method_exists(auth()->user()->currentAccessToken(), 'delete')) {
+        if (method_exists(auth()->user()->currentAccessToken(), 'delete')) {
             auth()->user()->currentAccessToken()->delete();
         }
 
