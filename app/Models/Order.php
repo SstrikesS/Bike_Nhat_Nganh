@@ -45,7 +45,7 @@ class Order extends Model
             DB::table('order_detail')
                 ->insert([
                     'order_id' => $id,
-                    'bike_id'  => $value
+                    'bike_id'  => $value['bike_id']
                 ]);
         }
     }
@@ -62,7 +62,7 @@ class Order extends Model
 
     function getOrder(int $id, mixed $data): Collection
     {
-        $valid_column = ['orders.order_name', 'orders.order_id', 'orders.order_end', 'orders.order_start',
+        $valid_column = ['orders.order_name', 'orders.order_id', 'orders.order_end', 'orders.order_start', 'orders.order_address',
                          'orders.order_status', 'orders.order_time', 'orders.bike_quantity', 'orders.order_total', 'orders.user_id'];
         $column_query = [];
 
@@ -88,7 +88,7 @@ class Order extends Model
 
     function getBikeInOrder(int $id, mixed $data): Collection
     {
-        $valid_column = ['bikes.bike_id', 'bikes.bike_price', 'bikes.bike_name', 'bikes.bike_classify', 'bikes.bike_local',
+        $valid_column = ['bikes.bike_id', 'bikes.bike_price', 'bikes.bike_name', 'bikes.bike_classify', 'bikes.bike_local', 'bikes.bike_address',
                          'bikes.bike_brand', 'bikes.bike_plate_num', 'bikes.bike_tank', 'bikes.bike_consumption', 'bikes.bike_capacity'];
         $column_query = [];
 

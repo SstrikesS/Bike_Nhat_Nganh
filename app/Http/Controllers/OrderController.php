@@ -8,6 +8,7 @@ use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
@@ -100,7 +101,7 @@ class OrderController extends Controller
                     $now = Carbon::now()->setTimezone('UTC')->addHours(7);
 
                     if ($orderStart <= $now) {
-                        $fail('The '.$attribute.' must be a date and time after the current time.');
+                        $fail('The ' . $attribute . ' must be a date and time after the current time.');
                     }
                 },
             ],
@@ -117,8 +118,9 @@ class OrderController extends Controller
         $filter_data = $request->only('order_name', 'order_start', 'order_end',
             'order_time', 'bike_quantity', 'user_id', 'order_total', 'order_address');
 
+        $bikes = [];
 
-        $validator->after(function ($validator) use ($request, &$filter_data, &$bike_id) {
+        $validator->after(function ($validator) use ($request, &$filter_data, &$bikes) {
             $orderStart = strtotime($request->post('order_start'));
             $orderEnd = strtotime($request->post('order_end'));
 
@@ -128,30 +130,70 @@ class OrderController extends Controller
 
                 return false;
             }
-            $bikes = [];
+            $result = [];
             foreach (explode(",", $request->post('bikes')) as $value) {
-                $bikes[] = (new Bike())->getBike((int)$value, [])->toArray();
+                $result[] = (new Bike())->getBike((int)$value, [])->toArray();
 
-                if (empty($bikes)) {
+                if (empty($result)) {
 
                     $validator->errors()->add('bikes', 'Không tìm thấy bike_id');
                     return false;
                 }
             }
 
-            $bike_address = [];
-
-            foreach ($bikes as $value) {
-                $bike_address[] = ((array)($value['0']))['bike_address'];
-                $bike_id[] = ((array)($value['0']))['bike_id'];
+            foreach ($result as $value) {
+                $bikes[] = [
+                    'bike_name' => ((array)($value['0']))['bike_name'],
+                    'bike_address' => ((array)($value['0']))['bike_address'],
+                    'bike_id'      => ((array)($value['0']))['bike_id'],
+                    'bike_price' =>  ((array)($value['0']))['bike_price'],
+                    'bike_classify' =>  ((array)($value['0']))['bike_classify'],
+                    'bike_local' =>  ((array)($value['0']))['bike_local'],
+                ];
             }
 
-            foreach ($bike_address as $value) {
-                if ($bike_address[0] != $value) {
+            $invalid_bike = [];
+            $check = 0;
 
-                    $validator->errors()->add('bikes', 'Các xe có bike_address khác nhau');
-                    return false;
+            foreach ($bikes as $value) {
+                if ($value['bike_address'] != $request->post('order_address')) {
+                    $validator->errors()->add('bikes', 'Các xe có bike_address khác với order_address');
+                    $invalid_bike[] = $value;
+                    $check++;
                 }
+            }
+
+            if($check){
+                $validator->errors()->add('invalid_bikes', $invalid_bike);
+
+                return false;
+            }
+
+            $check = 0;
+            $invalid_bike = [];
+            foreach ($bikes as $value) {
+                $invalid_bike = DB::table('orders')
+                    ->select('orders.order_start', 'orders.order_end')
+                    ->leftJoin('order_detail', 'order_detail.order_id', '=', 'orders.order_id')
+                    ->where('order_detail.bike_id', '=', $value['bike_id'])
+                    ->get()->toArray();
+//
+                if (!empty($invalid_bike) && (strtotime(((array)$invalid_bike['0'])['order_start'])) >= $orderStart &&
+                    (strtotime(((array)$invalid_bike['0'])['order_start'])) <= $orderEnd ||
+                    (strtotime(((array)$invalid_bike['0'])['order_end'])) >= $orderStart &&
+                    (strtotime(((array)$invalid_bike['0'])['order_end'])) <= $orderEnd) {
+
+                    $validator->errors()->add('bikes ' . $value['bike_id'], 'Xe đã được đặt trong khung giờ này!');
+                    $invalid_bike[] = $value;
+                    $check++;
+                }
+            }
+
+            if($check){
+                $validator->errors()->add('invalid_bikes', $invalid_bike);
+
+                return false;
+
             }
 
             if (count($bikes) != $request->post('bike_quantity')) {
@@ -177,13 +219,13 @@ class OrderController extends Controller
         } else {
             $order_id = (new Order())->addOrder($filter_data);
             if ($order_id) {
-                (new Order())->addOrderDetail($order_id, $bike_id);
+                (new Order())->addOrderDetail($order_id, $bikes);
 
                 return response()->json([
                     'code'    => 200,
                     'success' => true,
                 ]);
-            } else {
+            } else {            $bikes = [];
 
                 return response()->json([
                     'code'  => 200,

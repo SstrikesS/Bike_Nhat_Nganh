@@ -28,13 +28,15 @@ class BikeController extends Controller
         if (empty($limit)) $limit = 10;
 
         if(!empty($price_max)) $filter_data['price_max'] = $price_max;
+        if(!empty($price_min)) $filter_data['price_min'] = $price_max;
 
         $filter_data = [
             'page'    => $page,
             'keyword' => $keyword,
             'local'   => $local,
             'limit'   => $limit,
-            'min_price' => $price_min
+            'price_min' => $price_min,
+            'price_max' => $price_max
         ];
 
         if (!empty($column_query)) {
@@ -58,12 +60,15 @@ class BikeController extends Controller
         foreach ($result->items() as $value) {
             $data['items'][] = get_object_vars($value);
         }
+        if(!empty($data['items'])){
+            foreach ($data['items'] as &$value) {
+                $bikeImage = (new BikeImage)->getBikeImage($value['bike_id']);
+                $value['bikeImage'] = $bikeImage->toArray();
 
-        foreach ($data['items'] as &$value) {
-            $bikeImage = (new BikeImage)->getBikeImage($value['bike_id']);
-            $value['bikeImage'] = $bikeImage->toArray();
-
+            }
         }
+
+
         $data['meta_field'] = [
             'total'        => $result->total(),
             'per_page'     => $result->perPage(),

@@ -60,9 +60,6 @@ class Bike extends Model
         $db = DB::table('bikes')
             ->select($column_query);
 
-        if (!empty($data['search_by']['price'])) {
-            $db = $db->where('bikes.bike_price', 'LIKE', '%' . $data['keyword'] . '%', 'OR');
-        }
 
         if (!empty($data['search_by']['brand'])) {
             $db = $db->where('bikes.bike_brand', 'LIKE', '%' . $data['keyword'] . '%', 'OR');
@@ -77,15 +74,15 @@ class Bike extends Model
         }
 
         if(!empty($data['price_min'])) {
-            $db = $db->where('Bike.bike_price', '>=', $data['price_min'], 'AND');
+            $db = $db->where('bikes.bike_price', '>=', $data['price_min'], 'AND');
         }
 
         if(!empty($data['price_max'])) {
-            $db = $db->where('Bike.bike_price', '<=', $data['price_max'], 'AND');
+            $db = $db->where('bikes.bike_price', '<=', $data['price_max'], 'AND');
         }
 
         $db->orderBy('bikes.bike_price');
-
+//        dd($db->toSql());
         return $db->paginate($data['limit'], '*', 'page=' . $data['page'], $data['page']);
     }
 }
