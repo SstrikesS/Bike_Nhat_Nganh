@@ -19,19 +19,26 @@ Route::get('/', function () {
 
 Route::post('/register', 'AuthController@register');
 Route::post('/login', 'AuthController@login');
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me', 'AuthController@me');
-    Route::post('/logout', 'AuthController@logout');
-});
-
-Route::get('/orders', 'OrderController@index');
-Route::get('/order/{id}', 'OrderController@show');
-Route::post('/create/order', 'OrderController@create');
-Route::put('update/order/{id}', 'OrderController@update');
-
 Route::get('/bikes', 'BikeController@index');
 Route::get('/bike/{id}', 'BikeController@show');
+
+Route::group(['middleware' => ['auth:sanctum', 'role:admin|user']], function () {
+    Route::get('/me', 'AuthController@me');
+    Route::post('/logout', 'AuthController@logout');
+    Route::post('/create/order', 'OrderController@create');
+    Route::get('/orders', 'OrderController@index');
+    Route::get('/order/{id}', 'OrderController@show');
+
+})->middleware('permission:user');
+
+Route::group(['middleware' => ['auth:sanctum','role:admin']], function () {
+    Route::post('/update/order/{id}', 'OrderController@update');
+    Route::post('/update/bike/{id}', 'BikeController@edit');
+    Route::post('/create/bike', 'BikeController@create');
+    Route::delete('/delete/bike/{id}', 'BikeController@destroy');
+
+})->middleware('permission:all');
+
 
 Route::any('/unauth', function () {
     return response()->json([

@@ -1,0 +1,25 @@
+version : '3.9'
+name: thanhnt-nhatnganh-demo
+services:
+    php:
+        build:
+            dockerfile: Dockerfile-php
+            context: .
+        env_file:
+            - .env
+    db:
+        image: mariadb:10.11.2
+        restart: always
+        env_file:
+            - _docker/mariadb/.env
+        volumes:
+            - ./_store/db/var/lib/mysql/mysql:/var/lib/mysql
+            - ./_store/db/backup:/backup
+        ports:
+            - "30201:3306"
+    nginx:
+        build:
+            dockerfile: Dockerfile-nginx
+            context: .
+        ports:
+            - "30200:80

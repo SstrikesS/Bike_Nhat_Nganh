@@ -21,15 +21,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/register', 'AuthController@register');
 Route::post('/login', 'AuthController@login');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::group(['middleware' => 'role:admin|user'], function () {
     Route::get('/me', 'AuthController@me');
     Route::post('/logout', 'AuthController@logout');
-});
+    Route::post('/create/order', 'OrderController@create');
+    Route::get('/orders', 'OrderController@index');
+    Route::get('/order/{id}', 'OrderController@show');
 
-Route::get('/orders', 'OrderController@index');
-Route::get('/order/{id}', 'OrderController@show');
-Route::post('/create/order', 'OrderController@create');
-Route::put('update/order/{id}', 'OrderController@update');
+})->middleware('permission:user');
+
+Route::group(['middleware' => 'role:admin'], function () {
+    Route::post('update/order/{id}', 'OrderController@update');
+})->middleware('permission:all');
 
 Route::get('/bikes', 'BikeController@index');
 Route::get('/bike/{id}', 'BikeController@show');

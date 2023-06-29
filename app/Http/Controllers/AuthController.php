@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -18,7 +19,6 @@ class AuthController extends Controller
             'name'     => 'required|string|max:255|min:3',
             'email'    => 'required|email|unique:users|max:255',
             'password' => 'required|min:6',
-
         ]);
 
         if ($validator->fails()) {
@@ -38,18 +38,18 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
+            $token = $user->createToken('auth_token')->plainTextToken;
+
             DB::table('users')
                 ->where('users.email', 'LIKE', $request->email)
                 ->update([
-                    'classifical' => 1,
-                    'local'       => $request->post('local')
+                    'classifical' => 4,
+                    'local'       => $request->post('local'),
+                    'api_token' => $token
                 ]);
 
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
             return response()->json([
-                'access_token' => $token,
+                'api_token' => $token,
                 'token_type'   => 'Bearer',
                 'success'      => 'true',
                 'code'         => 200
@@ -78,10 +78,26 @@ class AuthController extends Controller
 
         $user = User::where('email', $request['email'])->firstOrFail();
 
+        if($request->is('api/*')){
+            $role = Role::findById(($user->toArray())['classifical'] + 2);
+        }else{
+            $role = Role::findById(($user->toArray())['classifical']);
+        }
+
+
+        $user->assignRole($role);
+
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $data['data'] =$user->toArray();
-        $data['data']['access_token'] = $token;
+        DB::table('users')
+            ->where('users.email', 'LIKE', $request->email)
+            ->update([
+                'api_token' => $token
+            ]);
+
+        $data['data'] = $user->toArray();
+        $data['data']['api_token'] = $token;
         $data['data']['token_type'] = 'Bearer';
         $data['data']['success'] = 'true';
         $data['data']['code'] = 200;
@@ -94,17 +110,4 @@ class AuthController extends Controller
         return $request->user();
     }
 
-    public function logout(Request $request): JsonResponse
-    {
-        if (method_exists(auth()->user()->currentAccessToken(), 'delete')) {
-            auth()->user()->currentAccessToken()->delete();
-        }
-
-        auth()->guard('web')->logout();
-
-        return response()->json([
-            'success' => true,
-            'code'    => 200
-        ]);
-    }
 }

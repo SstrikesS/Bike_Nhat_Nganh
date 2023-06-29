@@ -45,7 +45,7 @@ class OrderController extends Controller
 
         if (!empty($request->query('user_id'))) {
             $filter_data['user_id'] = $request->query('user_id');
-            $filter_data['search_by'] = 'order_name';
+            $filter_data['search_by'] = 'order_status';
         }
 
         if (!empty($request->query('column_query'))) {
@@ -177,7 +177,7 @@ class OrderController extends Controller
                     ->leftJoin('order_detail', 'order_detail.order_id', '=', 'orders.order_id')
                     ->where('order_detail.bike_id', '=', $value['bike_id'])
                     ->get()->toArray();
-//
+
                 if (!empty($invalid_bike) && (strtotime(((array)$invalid_bike['0'])['order_start'])) >= $orderStart &&
                     (strtotime(((array)$invalid_bike['0'])['order_start'])) <= $orderEnd ||
                     (strtotime(((array)$invalid_bike['0'])['order_end'])) >= $orderStart &&
@@ -225,7 +225,7 @@ class OrderController extends Controller
                     'code'    => 200,
                     'success' => true,
                 ]);
-            } else {            $bikes = [];
+            } else {
 
                 return response()->json([
                     'code'  => 200,
@@ -303,7 +303,7 @@ class OrderController extends Controller
     public function update(int $id, Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'order_status' => 'required|integer|min:0|max:4',
+            'order_status' => 'required|integer|min:1|max:5',
         ]);
 
         $validator->after(function ($validator) use ($request, &$data, $id) {

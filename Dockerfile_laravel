@@ -1,0 +1,59 @@
+FROM php:8.2.5-alpine
+
+ENV TZ="Asia/Ho_Chi_Minh"
+
+# Install lib raw image & read exif file
+RUN apk update \
+    && apk add --no-cache zip unzip pkgconf \
+    && apk add --no-cache jpegoptim optipng pngquant gifsicle \
+    && apk add --no-cache libraw exiftool imagemagick
+
+RUN apk add --no-cache libzip-dev && docker-php-ext-install zip \
+    && apk add --no-cache libpq-dev && docker-php-ext-install bcmath pdo_mysql mysqli \
+    && apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev \
+      && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS imagemagick-dev libtool \
+      && pecl install imagick && docker-php-ext-enable imagick \
+    && pecl install redis && docker-php-ext-enable redis \
+    && docker-php-ext-install exif \
+    && docker-php-ext-enable opcache
+
+# Clean
+RUN docker-php-source delete \
+    && rm -rf /var/cache/apk/*
+
+# Code
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Create system user to run Composer and Artisan Commands
+
+
+COPY app /www/app
+COPY bootstrap /www/bootstrap
+COPY config /www/config
+COPY database /www/database
+COPY public /www/public
+COPY resources /www/resources
+COPY routes /www/routes
+COPY storage /www/storage
+COPY tests /www/tests
+COPY vendor /www/vendor
+COPY .env /www/.env
+COPY .editorconfig /www/.editorconfig
+COPY .env.example /www/.env.example
+COPY .gitattributes /www/.gitattributes
+COPY artisan /www/artisan
+COPY package.json /www/package.json
+COPY phpunit.xml /www/phpunit.xml
+COPY vite.config.js /www/vite.config.js
+COPY site.conf /www/site.conf
+COPY composer.json /www/composer.json
+COPY composer.lock /www/composer.lock
+
+WORKDIR /www
+
+RUN composer install --optimize-autoloader --no-dev
+
+EXPOSE 8000
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

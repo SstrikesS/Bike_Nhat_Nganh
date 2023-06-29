@@ -142,7 +142,7 @@ class Order extends Model
 
         if (!empty($data['keyword'])) {
             if ($data['search_by'] == 'order_status') {
-                $db = $db->where('orders.order_status', 'LIKE', '%' . $data['keyword'] . '%', 'AND');
+                $db = $db->where('orders.order_status', '=', $data['keyword'], 'AND');
             } else {
                 $db = $db->where('orders.order_name', 'LIKE', '%' . $data['keyword'] . '%', 'AND');
             }
