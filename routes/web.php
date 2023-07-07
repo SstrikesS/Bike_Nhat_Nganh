@@ -17,6 +17,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
 Route::post('/register', 'AuthController@register');
 Route::post('/login', 'AuthController@login');
 Route::get('/bikes', 'BikeController@index');
@@ -28,16 +29,17 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin|user']], function () 
     Route::post('/create/order', 'OrderController@create');
     Route::get('/orders', 'OrderController@index');
     Route::get('/order/{id}', 'OrderController@show');
-
+    Route::post('/update/order/{id}', 'OrderController@update');
 })->middleware('permission:user');
 
 Route::group(['middleware' => ['auth:sanctum','role:admin']], function () {
-    Route::post('/update/order/{id}', 'OrderController@update');
+    
     Route::post('/update/bike/{id}', 'BikeController@edit');
     Route::post('/create/bike', 'BikeController@create');
-    Route::delete('/delete/bike/{id}', 'BikeController@destroy');
+    Route::get('/delete/bike/{id}', 'BikeController@destroy');
 
 })->middleware('permission:all');
+
 
 
 Route::any('/unauth', function () {

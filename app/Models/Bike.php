@@ -164,9 +164,11 @@ class Bike extends Model
     function deleteBike(int $id): void
     {
         DB::table('bikes')
-            ->delete($id);
+	    ->where('bikes.bike_id', '=', $id)
+            ->delete();
         DB::table('bike_images')
-            ->delete($id);
+	    ->where('bike_images.bike_id', '=', $id)
+            ->delete();
     }
 
 }

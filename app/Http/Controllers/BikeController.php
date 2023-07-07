@@ -137,17 +137,17 @@ class BikeController extends Controller
     public function create(Request $request): JsonResponse
     {
         $validate = Validator::make($request->all(), [
-            'bike_name'        => 'required|string|max:255|min:1',
-            'bike_price'       => 'required|int|min:1',
-            'bike_classify'    => 'required|int|min:0|max:1',
-            'bike_local'       => 'required|string|max:255|min:1',
-            'bike_brand'       => 'required|string|max:255|min:1',
-            'bike_plate_num'   => 'required|string|max:255|min:1',
-            'bike_tank'        => 'required|string|max:255|min:1',
-            'bike_consumption' => 'required|string|max:255|min:1',
-            'bike_capacity'    => 'required|string|max:255|min:1',
-            'bike_address'     => 'required|string|max:255|min:1',
-            'bike_image'       => 'required|array',
+            'bike_name'        => 'string|max:255|min:1',
+            'bike_price'       => 'int|min:1',
+            'bike_classify'    => 'int|min:0|max:1',
+            'bike_local'       => 'string|max:255|min:1',
+            'bike_brand'       => 'string|max:255|min:1',
+            'bike_plate_num'   => 'string|max:255|min:1',
+            'bike_tank'        => 'string|max:255|min:1',
+            'bike_consumption' => 'string|max:255|min:1',
+            'bike_capacity'    => 'string|max:255|min:1',
+            'bike_address'     => 'string|max:255|min:1',
+            'bike_image'       => 'array',
         ]);
 
         if ($validate->fails()) {
@@ -184,13 +184,13 @@ class BikeController extends Controller
                 ], 500);
             }
 
-            foreach ($request->post('bike_image') as $bike_image) {
-                dump($bike_image);
-                (new Bike())->addBikeImage($value, [
-                    'bike_title' => $request->post('bike_title'),
-                    'bike_image' => $bike_image,
-                ]);
-            }
+       // foreach ($request->post('bike_image') as $bike_image) {
+       //          dump($bike_image);
+       //          (new Bike())->addBikeImage($value, [
+       //              'bike_title' => $request->post('bike_title'),
+       //              'bike_image' => $bike_image,
+       //          ]);
+       //      }
         }
 
         return response()->json([
@@ -286,9 +286,13 @@ class BikeController extends Controller
     /**
      * Remove the specified bike from database.
      */
-    public function destroy(int $id): void
+    public function destroy(int $id): JsonResponse
     {
         (new Bike)->deleteBike($id);
+	return response()->json([
+            'success' => true,
+            'code'    => 200
+        ], 200);
     }
 
 }

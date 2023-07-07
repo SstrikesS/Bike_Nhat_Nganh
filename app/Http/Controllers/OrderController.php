@@ -178,14 +178,16 @@ class OrderController extends Controller
                     ->where('order_detail.bike_id', '=', $value['bike_id'])
                     ->get()->toArray();
 
-                if (!empty($invalid_bike) && (strtotime(((array)$invalid_bike['0'])['order_start'])) >= $orderStart &&
-                    (strtotime(((array)$invalid_bike['0'])['order_start'])) <= $orderEnd ||
-                    (strtotime(((array)$invalid_bike['0'])['order_end'])) >= $orderStart &&
-                    (strtotime(((array)$invalid_bike['0'])['order_end'])) <= $orderEnd) {
+                 if (!empty($invalid_bike)) {
+                    if ((strtotime(((array)$invalid_bike['0'])['order_start'])) >= $orderStart &&
+                        (strtotime(((array)$invalid_bike['0'])['order_start'])) <= $orderEnd ||
+                        (strtotime(((array)$invalid_bike['0'])['order_end'])) >= $orderStart &&
+                        (strtotime(((array)$invalid_bike['0'])['order_end'])) <= $orderEnd) {
 
-                    $validator->errors()->add('bikes ' . $value['bike_id'], 'Xe đã được đặt trong khung giờ này!');
-                    $invalid_bike[] = $value;
-                    $check++;
+                        $validator->errors()->add('bikes ' . $value['bike_id'], 'Xe đã được đặt trong khung giờ này!');
+                        $invalid_bike[] = $value;
+                        $check++;
+                    }
                 }
             }
 

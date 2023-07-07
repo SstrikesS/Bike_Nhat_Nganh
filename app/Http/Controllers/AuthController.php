@@ -87,8 +87,7 @@ class AuthController extends Controller
 
         $user->assignRole($role);
 
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->api_token;
 
         DB::table('users')
             ->where('users.email', 'LIKE', $request->email)
